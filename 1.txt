@@ -1,0 +1,501 @@
+学习笔记1——Git简介
+Git是什么？
+Git是目前世界上最先进的分布式版本控制系统（没有之一）。可以有效、高速的处理从很小到非常大的项目版本管理。
+什么是版本控制系统？
+举个例子，如果有一个软件，不但能自动帮你记录每次文件的改动，还可以让同事协作编辑，这样就不用自己管理一堆类似的文件了，也不需要把文件传来传去。如果想查看某次改动，只需要在软件里瞄一眼就可以。这个软件用起来就应该像这个样子，能记录每次文件的改动：
+ 于是你可以从手动管理多个“版本”里解放出来，这就是版本控制。
+集中式vs分布式
+先说集中式版本控制系统，版本库是集中存放在中央服务器的，而干活的时候，用的都是自己的电脑，所以要先从中央服务器取得最新的版本，然后开始干活，干完活了，再把自己的活推送给中央服务器。中央服务器就好比是一个图书馆，你要改一本书，必须先从图书馆借出来，然后回到家自己改，改完了，再放回图书馆。
+ 集中式版本控制系统最大的毛病就是必须联网才能工作，如果在局域网内还好，带宽够大，速度够快，可如果在互联网上，遇到网速慢的话，可能提交一个10M的文件就需要5分钟，这还不得把人给憋死啊。
+那分布式版本控制系统与集中式版本控制系统有何不同呢？首先，分布式版本控制系统根本没有“中央服务器”，每个人的电脑上都是一个完整的版本库，这样，你工作的时候，就不需要联网了，因为版本库就在你自己的电脑上。既然每个人电脑上都有一个完整的版本库，那多个人如何协作呢？比方说你在自己电脑上改了文件A，你的同事也在他的电脑上改了文件A，这时，你们俩之间只需把各自的修改推送给对方，就可以互相看到对方的修改了。
+和集中式版本控制系统相比，分布式版本控制系统的安全性要高很多，因为每个人电脑里都有完整的版本库，某一个人的电脑坏掉了不要紧，随便从其他人那里复制一个就可以了。而集中式版本控制系统的中央服务器要是出了问题，所有人都没法干活了。
+在实际使用分布式版本控制系统的时候，其实很少在两人之间的电脑上推送版本库的修改，因为可能你们俩不在一个局域网内，两台电脑互相访问不了，也可能今天你的同事病了，他的电脑压根没有开机。因此，分布式版本控制系统通常也有一台充当“中央服务器”的电脑，但这个服务器的作用仅仅是用来方便“交换”大家的修改，没有它大家也一样干活，只是交换修改不方便而已。
+ 当然，Git的优势不单是不必联网这么简单，后面我们还会看到Git极其强大的分支管理，把SVN等远远抛在了后面。
+Git的特点
+分布式相比于集中式的最大区别在于开发者可以提交到本地，每个开发者通过克隆（git clone），在本地机器上拷贝一个完整的Git仓库。
+Git的功能特性
+从一般开发者的角度来看，git有以下功能：
+1.从服务器上克隆完整的Git仓库（包括代码和版本信息）到单机上。
+2.在自己的机器上根据不同的开发目的，创建分支，修改代码。
+3.在单机上自己创建的分支上提交代码。
+4.在单机上合并分支。
+5.把服务器上最新版的代码fetch下来，然后跟自己的主分支合并。
+6.生成补丁（patch），把补丁发送给主开发者。
+7.看主开发者的反馈，如果主开发者发现两个一般开发者之间有冲突（他们之间可以合作解决的冲突），就会要求他们先解决冲突，然后再由其中一个人提交。如果主开发者可以自己解决，或者没有冲突，就通过。
+8.一般开发者之间解决冲突的方法，开发者之间可以使用pull 命令解决冲突，解决完冲突之后再向主开发者提交补丁。
+从主开发者的角度（假设主开发者不用开发代码）看，git有以下功能：
+1.查看邮件或者通过其它方式查看一般开发者的提交状态。
+2.打上补丁，解决冲突（可以自己解决，也可以要求开发者之间解决以后再重新提交，如果是开源项目，还要决定哪些补丁有用，哪些不用）。
+3.向公共服务器提交结果，然后通知所有开发人员。
+经典的Git开发过程
+ 
+学习笔记2——版本库创建
+什么是版本库？
+版本库又名仓库，英文名repository，可以简单理解成一个目录，这个目录里面的所有文件都可以被Git管理起来，每个文件的修改、删除，Git都能跟踪，以便任何时刻都可以追踪历史，或者在将来某个时刻可以“还原”。
+创建版本库
+第一步
+选择一个合适的地方，创建一个空目录：
+$ mkdir learngit（文件名）
+$ cd learngit
+$ pwd
+/e/workspace/workspace-study/learngit
+第二步
+通过git init命令把这个目录变成Git可以管理的仓库：
+$ git init
+Initialized empty Git repository in E:/workspace/workspace-study/learngit/.git/
+瞬间Git就把仓库建好了，而且告诉你是一个空的仓库（empty Git repository），可以发现当前目录下多了一个.git的目录，这个目录是Git来跟踪管理版本库的，没事千万不要手动修改这个目录里面的文件，不然改乱了，就把Git仓库给破坏了。
+•git init 命令的作用是初始化一个 Git 仓库（repository），即把当前所在目录变成 Git 可以管理的仓库。
+•git init [project-name] 命令可以新建一个目录，将其初始化为Git仓库。
+如果你没有看到.git目录，那是因为这个目录默认是隐藏的，用ls -ah命令就可以看见。
+$ ls -ah
+./  ../  .git/
+也不一定必须在空目录下创建Git仓库，选择一个已经有东西的目录也是可以的。
+把文件添加到版本库
+事先说明
+所有的版本控制系统，其实只能跟踪文本文件的改动，比如TXT文件，网页，所有的程序代码等等，Git也不例外。版本控制系统可以告诉你每次的改动，比如在第5行加了一个单词“Linux”，在第8行删了一个单词“Windows”。而图片、视频这些二进制文件，虽然也能由版本控制系统管理，但没法跟踪文件的变化，只能把二进制文件每次改动串起来，也就是只知道图片从100KB改成了120KB，但到底改了啥，版本控制系统不知道，也没法知道。
+不幸的是，Microsoft的Word格式是二进制格式，因此，版本控制系统是没法跟踪Word文件的改动的，前面我们举的例子只是为了演示，如果要真正使用版本控制系统，就要以纯文本方式编写文件。
+因为文本是有编码的，比如中文有常用的GBK编码，日文有Shift_JIS编码，如果没有历史遗留问题，强烈建议使用标准的UTF-8编码，所有语言使用同一种编码，既没有冲突，又被所有平台所支持。
+准备工作
+编写一个readme.txt文件，内容如下：
+Git is a version control system.
+Git is a free software.
+一定要放到learngit目录下（子目录也行），因为这是一个Git仓库，如果放到其他地方，那么Git再厉害也找不到这个文件。
+第一步
+用命令git add告诉Git，把文件（这里是上面创建的文件readme.txt）添加到仓库：
+$ git add readme.txt
+执行上面的命令，没有任何显示，这就对了，Unix的哲学是“没有消息就是好消息”，说明添加成功。
+•git add [file1] [file2] ... 命令的作用是把文件添加到暂存区（stage），可被 track 追踪纪录下来。可多次使用来添加多个文件。
+•git add [dir] 命令的作用是添加指定目录到暂存区，包括子目录。
+•git add . 命令的作用是暂存新增加的和修改的文件，不包括已删除的文件。即当前目录下所有文件。
+第二步
+用命令git commit告诉Git，把文件提交到仓库：
+$ git commit -m "wrote a readme file"
+[master (root-commit) 62c3c5e] wrote a readme file
+ 1 file changed, 2 insertions(+)
+ create mode 100644 readme.txt
+•git commit -m [message] 命令的作用是一次性把暂存区所有文件修改提交到仓库的当前分支，-m后面输入的是本次提交的说明，可以输入任意内容，当然最好是有意义的，这样你就能从历史记录里方便地找到改动记录。
+git commit命令执行成功后会告诉你，1 file changed：1个文件被改动（我们新添加的readme.txt文件）；2 insertions：插入了两行内容（readme.txt有两行内容）。
+为什么Git添加文件需要add，commit一共两步？
+因为commit可以一次提交很多文件，所以你可以多次add不同的文件，比如：
+$ git add file1.txt
+$ git add file2.txt file3.txt
+$ git commit -m "add 3 files"
+[master 1e15953] add 3 files
+ 3 files changed, 6 insertions(+)
+ create mode 100644 file1.txt
+ create mode 100644 file2.txt
+ create mode 100644 file3.txt
+小结
+•初始化一个Git仓库，使用git init命令。
+•添加文件到Git仓库，分两步：
+1.使用命令git add [file]，注意，可反复多次使用，添加多个文件；
+2.使用命令git commit -m [message]，完成。
+
+学习笔记3——修改文件、查看、提交修改
+修改文件
+我们已经成功地添加并提交了一个readme.txt文件，现在，是时候继续工作了，于是，我们继续修改readme.txt文件，改成如下内容：
+Git is a distributed version control system.
+Git is a free software.
+显示修改文件
+现在，运行git status 命令看看结果：
+$ git status
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+ modified:   readme.txt
+no changes added to commit (use "git add" and/or "git commit -a")
+•git status 命令的作用是显示当前仓库的最新状态。提交之后，工作区就是“干净的”，即没有新的修改；有未提交文件时，最上面显示的是在 staging area，即将被 commit 的文件；中间显示没有 stage 的修改了的文件，最下面是新的还没有被 Git track 的文件。
+上面的命令输出告诉我们，readme.txt被修改过了，但还没有准备提交的修改。
+显示修改内容
+虽然Git告诉我们readme.txt被修改了，但如果能看看具体修改了什么内容，自然是很好的。比如你休假两周从国外回来，第一天上班时，已经记不清上次怎么修改的readme.txt，所以，需要用git diff 命令看看：
+$ git diff readme.txt
+diff --git a/readme.txt b/readme.txt
+index 0065b6f..0a30af0 100644
+--- a/readme.txt
++++ b/readme.txt
+@@ -1,2 +1,2 @@
+-Git is a version control system.
++Git is a distributed version control system.
+ Git is a free software.
+•git diff [file]命令的作用是查看指定文件具体修改了哪些内容。
+•git diff命令的作用是查看工作区中的修改。
+•git diff --staged 或 git diff --cached命令的作用是查看暂存区中的修改。
+•git diff [commit id1] [commit id2]命令的作用是比较两次 commit 之间的差异。
+•git diff [branch1] [branch2]命令的作用是在两个 branch 之间比较。
+可以从上面的命令输出看到，我们在第一行添加了一个distributed单词。
+知道了对readme.txt作了什么修改后，再把它提交到仓库就放心多了。
+提交修改
+第一步
+git add [file]：
+$ git add readme.txt
+•1
+同样没有任何输出，这时可以运行git status看看当前仓库的状态：
+$ git status
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+modified:   readme.txt
+git status告诉我们，将要被提交的修改包括readme.txt。
+第二步
+git commit -m [message]：
+$ git commit -m "add distributed"
+[master e30c756] add distributed
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+提交后，我们再用git status命令看看仓库的当前状态：
+$ git status
+On branch master
+nothing to commit, working tree clean
+Git告诉我们当前没有需要提交的修改，而且，工作目录是干净（working tree clean）的。
+小结
+•提交修改与添加文件到Git仓库的步骤一样：
+1.git add [file]
+2.git commit -m [message]
+•要随时掌握工作区的状态，使用git status命令。
+•如果git status告诉你有文件被修改过，用git diff可以查看修改内容。
+
+学习笔记4——版本回退
+背景
+再一次修改readme.txt文件如下：
+Git is a distributed version control system.
+Git is a free software distributed under the GPL.
+然后提交：
+$ git add readme.txt
+$ git commit -m "append GPL"
+[master 4c24228] append GPL
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+像这样，你不断对文件进行修改，然后不断提交修改到版本库里。每当你觉得文件修改到一定程度的时候，就可以“保存一个快照”，这个快照在Git中被称为commit。一旦你把文件改乱了，或者误删了文件，还可以从最近的一个commit恢复，然后继续工作，而不是把几个月的工作成果全部丢失。
+现在readme.txt文件一共有3个版本被提交到Git仓库里了：
+版本1：wrote a readme file
+Git is a version control system.
+Git is a free software.
+版本2：add distributed
+Git is a distributed version control system.
+Git is a free software.
+版本3：append GPL
+Git is a distributed version control system.
+Git is a free software distributed under the GPL.
+查看提交历史
+当然了，在实际工作中，我们脑子里怎么可能记得一个几千行的文件每次都改了什么内容，不然要版本控制系统干什么。版本控制系统肯定有某个命令可以告诉我们历史记录，在Git中，我们用git log 命令查看：
+$ git log
+commit 4c24228bc498e7238e7979ff0c64168c0bae6968 (HEAD -> master)
+Author: XXX <XXX@qq.com>
+Date:   Mon Oct 15 14:55:52 2018 +0800
+append GPL
+commit e30c75691fe7e0c7038734d61f050c75c45aa316
+Author: XXX <XXX@qq.com>
+Date:   Mon Oct 15 14:37:31 2018 +0800
+add distributed
+commit 62c3c5e0391cc2ab6f9d552a45bf6d182c7d47ea
+Author: XXX <XXX@qq.com>
+Date:   Mon Oct 15 13:58:55 2018 +0800
+wrote a readme file
+我们可以看到3次提交，最近的一次是append GPL，上一次是add distributed，最早的一次是wrote a readme file。
+如果嫌输出信息太多，看得眼花缭乱的，可以试试加上--pretty=oneline参数：
+$ git log --pretty=oneline
+4c24228bc498e7238e7979ff0c64168c0bae6968 (HEAD -> master) append GPL
+e30c75691fe7e0c7038734d61f050c75c45aa316 add distributed
+62c3c5e0391cc2ab6f9d552a45bf6d182c7d47ea wrote a readme file
+这里你看到的一大串类似4c24228...的是commit id（版本号），是一个SHA1计算出来的一个非常大的数字，用十六进制表示，而且你看到的commit id和我的肯定不一样，以你自己的为准。为什么commit id需要用这么一大串数字表示呢？因为Git是分布式的版本控制系统，后面我们还要研究多人在同一个版本库里工作，如果大家都用1，2，3……作为版本号，那肯定就冲突了。
+•git log 命令的作用是显示从最近到最远的提交日志，包括每个提交的 SHA-1 校验和、作者的名字和电子邮件地址、提交时间以及提交说明等基本信息。
+•git log --graph命令的作用是查看分支合并图。
+•git log --pretty=oneline命令的作用是简化日志信息，将每个提交放在一行显示，查看的提交数很大时非常有用，也可带有--graph 参数，效果同git config format.pretty oneline。
+•git log --graph --pretty=oneline --abbrev-commit命令的作用是查看分支的合并情况，包括分支合并图、一行显示、提交校验码缩略显示。
+版本回退
+现在我们准备把readme.txt回退到上一个版本，也就是add distributed的那个版本。
+首先，Git必须知道当前版本是哪个版本，在Git中，用HEAD表示当前版本，也就是最新的提交4c24228...（注意我的提交ID和你的肯定不一样），上一个版本就是HEAD^，上上一个版本就是HEAD^^，当然往上100个版本写100个^比较容易数不过来，所以写成HEAD~100。
+现在，我们要把当前版本append GPL回退到上一个版本add distributed，就可以使用git reset 命令：
+$ git reset --hard HEAD^
+HEAD is now at e30c756 add distributed
+•git reset --hard HEAD^命令的作用是回退到上一个版本。同理，回退到上上个版本为：HEAD^^， 回退到上100个版本为：HEAD-100，波浪号 ~ 也可以，变成倒数第101个。
+看看readme.txt的内容是不是版本add distributed：
+$ cat readme.txt
+Git is a distributed version control system.
+Git is a free software.
+•cat [file]命令的作用是一次显示整个文件。
+果然被还原了。我们用git log再看看现在版本库的状态：
+$ git log
+commit e30c75691fe7e0c7038734d61f050c75c45aa316 (HEAD -> master)
+Author: XXX <XXX@qq.com>
+Date:   Mon Oct 15 14:37:31 2018 +0800
+add distributed
+commit 62c3c5e0391cc2ab6f9d552a45bf6d182c7d47ea
+Author: XXX <XXX@qq.com>
+Date:   Mon Oct 15 13:58:55 2018 +0800
+wrote a readme file
+最新的那个版本append GPL已经看不到了！好比你从21世纪坐时光穿梭机来到了19世纪，想再回去已经回不去了，肿么办？
+办法其实还是有的，只要上面的命令行窗口还没有被关掉，你就可以顺着往上找啊找啊，找到那个append GPL的commit id是4c24228...，于是就可以指定回到未来的某个版本：
+$ git reset --hard 4c24228
+HEAD is now at 4c24228 append GPL
+•git reset --hard [commit id]命令的作用是回退到某一提交过的版本，如果已经 push，则回退的意义不大了。
+版本号没必要写全，前几位就可以了，Git会自动去找。当然也不能只写前一两位，因为Git可能会找到多个版本号，就无法确定是哪一个了。
+再看看readme.txt的内容：
+$ cat readme.txt
+Git is a distributed version control system.
+Git is a free software distributed under the GPL.
+果然，又回来了。
+Git的版本回退速度非常快，因为Git在内部有个指向当前版本的HEAD指针，当你回退版本的时候，Git仅仅是把HEAD从指向append GPL：
+ 改为指向add distributed：
+ 然后顺便把工作区的文件更新了。所以你让HEAD指向哪个版本号，你就把当前版本定位在哪。
+现在，你回退到了某个版本，关掉了电脑，第二天早上就后悔了，想恢复到新版本怎么办？找不到新版本的commit id怎么办？
+在Git中，总是有后悔药可以吃的。当你用$ git reset --hard HEAD^回退到add distributed版本时，再想恢复到append GPL，就必须找到append GPL的commit id。Git提供了一个命令git reflog用来记录你的每一次命令：
+$ git reflog
+e30c756 HEAD@{1}: reset: moving to HEAD^
+4c24228 (HEAD -> master) HEAD@{2}: commit: append GPL
+e30c756 HEAD@{3}: commit: add distributed
+62c3c5e HEAD@{4}: commit (initial): wrote a readme file
+从输出可知，append GPL的commit id是4c24228，现在，你又可以乘坐时光机回到未来了。
+•git reflog命令的作用是显示当前分支的最近几次提交。它纪录每一次命令，可用于查找某一提交版本的 commit id。
+小结
+•HEAD指向的版本就是当前版本，因此，Git允许我们在版本的历史之间穿梭，使用命令git reset --hard commit_id。
+•穿梭前，用git log可以查看提交历史，以便确定要回退到哪个版本。
+•要重返未来，用git reflog查看命令历史，以便确定要回到未来的哪个版本。
+
+学习笔记5——工作区和暂存区
+名词解释
+工作区（Working Directory）
+就是你在电脑里能看到的目录，比如我的learngit文件夹就是一个工作区：
+ 版本库（Repository）
+工作区有一个隐藏目录.git，这个不算工作区，而是Git的版本库。
+Git的版本库里存了很多东西，其中最重要的就是称为stage（或者叫index）的暂存区，还有Git为我们自动创建的第一个分支master，以及指向master的一个指针叫HEAD。
+ 前面讲了我们把文件往Git版本库里添加的时候，是分两步执行的：
+第一步是用git add把文件添加进去，实际上就是把文件修改添加到暂存区；
+第二步是用git commit提交更改，实际上就是把暂存区的所有内容提交到当前分支。
+因为我们创建Git版本库时，Git自动为我们创建了唯一一个master分支，所以，现在，git commit就是往master分支上提交更改。
+可以简单理解为，需要提交的文件修改通通放到暂存区，然后，一次性提交暂存区的所有修改。
+工作原理
+现在再对readme.txt做个修改，比如加上一行内容：
+Git is a distributed version control system.
+Git is a free software distributed under the GPL.
+Git has a mutable index called stage.
+然后，在工作区新增一个LICENSE文本文件（内容随便写）。
+先用git status查看一下状态：
+$ git status
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+modified:   readme.txt
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+LICENSE
+no changes added to commit (use "git add" and/or "git commit -a")
+Git非常清楚地告诉我们，readme.txt被修改了，而LICENSE还从来没有被添加过，所以它的状态是Untracked。
+现在，使用两次命令git add，把readme.txt和LICENSE都添加后，用git status再查看一下：
+$ git status
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+new file:   LICENSE
+modified:   readme.txt
+现在，暂存区的状态就变成这样了：
+ 所以，git add命令实际上就是把要提交的所有修改放到暂存区（Stage），然后，执行git commit就可以一次性把暂存区的所有修改提交到分支：
+$ git commit -m "understand how stage works"
+[master 0de6e49] understand how stage works
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+ create mode 100644 LICENSE
+一旦提交后，如果你又没有对工作区做任何修改，那么工作区就是“干净”的：
+$ git status
+On branch master
+nothing to commit, working tree clean
+现在版本库变成了这样，暂存区就没有任何内容了：
+ 小结
+暂存区是Git非常重要的概念，弄明白了暂存区，就弄明白了Git的很多操作到底干了什么。
+
+学习笔记6——管理修改
+什么是修改？
+比如你新增了一行，这就是一个修改，删除了一行，也是一个修改，更改了某些字符，也是一个修改，删了一些又加了一些，也是一个修改，甚至创建一个新文件，也算一个修改。
+Git跟踪并管理的是修改，而不是文件
+当你用git add命令后，在工作区的第一次修改被放入暂存区，准备提交；如果你又进行了第二次修改，之后没有使用git add命令，那么第二次修改并不会被放入暂存区，而git commit只负责把暂存区的修改提交，也就是第一次的修改被提交了，第二次的修改不会被提交。
+提交后，用git diff HEAD -- readme.txt命令可以查看工作区和版本库里面最新版本的区别：
+$ git diff HEAD -- readme.txt 
+diff --git a/readme.txt b/readme.txt
+index 76d770f..a9c5755 100644
+--- a/readme.txt
++++ b/readme.txt
+@@ -1,4 +1,4 @@
+ Git is a distributed version control system.
+ Git is free software distributed under the GPL.
+ Git has a mutable index called stage.
+-Git tracks changes.
++Git tracks changes of files.
+•git diff HEAD -- [file]命令的作用是查看版本库最新版本和工作区之间的区别。
+可见，第二次修改确实没有被提交。
+那怎么提交第二次修改呢？你可以继续git add再git commit，也可以别着急提交第一次修改，先git add第二次修改，再git commit，就相当于把两次修改合并后一块提交了：
+第一次修改 -> git add -> 第二次修改 -> git add -> git commit
+撤销修改
+尚未git add
+如果错误发现得很及时，就可以很容易地纠正它。你可以手动把文件恢复到上一个版本的状态。如果用git status查看一下：
+$ git status
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+modified:   readme.txt
+no changes added to commit (use "git add" and/or "git commit -a")
+使用git checkout -- [file]
+你可以发现，Git会告诉你，git checkout -- [file]可以丢弃工作区的修改：
+$ git checkout -- readme.txt
+•git checkout -- [file]命令的作用是丢弃工作区的修改，包括修改后还没有放到暂存区和添加到暂存区后又作了修改两种情况。总之，让该文件回到最近一次git commit 或git add 之后的状态。
+git checkout -- [file]命令中的--很重要，没有--，就变成了“切换到另一个分支”的命令。
+命令git checkout -- readme.txt意思就是，把readme.txt文件在工作区的修改全部撤销，这里有两种情况：
+•readme.txt修改后还没有被放到暂存区，现在，撤销修改就回到和版本库一模一样的状态。
+•readme.txt已经添加到暂存区后，又作了修改，现在，撤销修改就回到添加到暂存区后的状态。
+总之，就是让这个文件回到最近一次git commit或git add时的状态。
+已git add，尚未git commit
+用git status查看一下，修改只是添加到了暂存区，还没有提交：
+$ git status
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+modified:   readme.txt
+使用git reset HEAD [file]
+Git同样告诉我们，用命令git reset HEAD [file]可以把暂存区的修改撤销掉（unstage），重新放回工作区：
+$ git reset HEAD readme.txt
+Unstaged changes after reset:
+M    readme.txt
+•git reset命令既可以回退版本，也可以把暂存区的修改回退到工作区。当我们用HEAD时，表示最新的版本。
+•git reset HEAD [file]命令的作用是把暂存区的修改撤销（unstage），回退到工作区。注意：在 Git 中任何已提交的东西几乎总是可以恢复的。甚至那些被删除的分支中的提交或使用 –amend 选项覆盖的提交也可以恢复。然而，任何未提交的东西丢失后很可能再也找不到了。
+再用git status查看一下，现在暂存区是干净的，工作区有修改：
+$ git status
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+modified:   readme.txt
+再使用git checkout -- [file]
+用git checkout -- [file]丢弃工作区的修改：
+$ git checkout -- readme.txt
+$ git status
+On branch master
+nothing to commit, working tree clean
+已提交到版本库
+现在，假设你不但改错了东西，还从暂存区提交到了版本库，怎么办呢？可以通过版本回退来回退到上一个版本。不过，这是有条件的，就是你还没有把自己的本地版本库推送到远程。
+删除文件
+在Git中，删除也是一个修改操作。
+先添加一个新文件test.txt到Git并且提交：
+$ git add test.txt
+$ git commit -m "add test.txt"
+[master b84166e] add test.txt
+ 1 file changed, 1 insertion(+)
+ create mode 100644 test.txt
+一般情况下，你通常直接在文件管理器中把没用的文件删了，或者用rm命令删了：
+$ rm test.txt
+•1
+•git rm [file1] [file2] ...命令的作用是删除工作区文件，并且将这次删除放入暂存区。
+这个时候，Git知道你删除了文件，因此，工作区和版本库就不一致了，git status命令会立刻告诉你哪些文件被删除了：
+$ git status
+On branch master
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+deleted:    test.txt
+no changes added to commit (use "git add" and/or "git commit -a")
+现在你有两个选择，一是确实要从版本库中删除该文件，那就用命令git rm删掉，并且git commit：
+$ git rm test.txt
+rm 'test.txt'
+$ git commit -m "remove test.txt"
+[master d46f35e] remove test.txt
+ 1 file changed, 1 deletion(-)
+ delete mode 100644 test.txt
+现在，文件就从版本库中被删除了。
+先手动删除文件，然后使用git rm [file]和git add [file]效果是一样的。
+另一种情况是删错了，因为版本库里还有，所以可以很轻松地把误删的文件恢复到最新版本：
+$ git checkout -- test.txt
+git checkout其实是用版本库里的版本替换工作区的版本，无论工作区是修改还是删除，都可以“一键还原”。
+小结
+•每次修改，如果不用git add到暂存区，那就不会加入到commit中。
+•撤销修改的不同场景：
+1.场景1：当你改乱了工作区某个文件的内容，想直接丢弃工作区的修改时，用命令git checkout -- [file]。
+2.场景2：当你不但改乱了工作区某个文件的内容，还添加到了暂存区时，想丢弃修改，分两步，第一步用命令git reset HEAD [file]，就回到了场景1，第二步按场景1操作。
+3.场景3：已经提交了不合适的修改到版本库时，想要撤销本次提交，参考版本回退，不过前提是没有推送到远程库。
+•命令git rm用于删除一个文件。如果一个文件已经被提交到版本库，那么你永远不用担心误删，但是要小心，你只能恢复文件到最新版本，你会丢失最近一次提交后你修改的内容。
+
+学习笔记7——远程仓库
+介绍
+Git是分布式版本控制系统，同一个Git仓库，可以分布到不同的机器上。怎么分布呢？最早，肯定只有一台机器有一个原始版本库，此后，别的机器可以“克隆”这个原始版本库，而且每台机器的版本库其实都是一样的，并没有主次之分。
+实际情况往往是这样，找一台电脑充当服务器的角色，每天24小时开机，其他每个人都从这个“服务器”仓库克隆一份到自己的电脑上，并且各自把各自的提交推送到服务器仓库里，也从服务器仓库中拉取别人的提交。
+GitHub网站就是提供Git仓库托管服务的，所以，只要注册一个GitHub账号，就可以免费获得Git远程仓库。
+设置
+由于你的本地Git仓库和GitHub仓库之间的传输是通过SSH加密的，所以，需要一点设置：
+第一步
+创建SSH Key。在用户主目录下，看看有没有.ssh目录，如果有，再看看这个目录下有没有id_rsa和id_rsa.pub这两个文件，如果已经有了，可直接跳到下一步。如果没有，打开Git Bash，创建SSH Key：
+$ ssh-keygen -t rsa -C "youremail@xxx.com"
+你需要把邮件地址换成你自己的邮件地址，然后一路回车，使用默认值即可，由于这个Key也不是用于军事目的，所以也无需设置密码。
+如果一切顺利的话，可以在用户主目录里找到.ssh目录，里面有id_rsa和id_rsa.pub两个文件，这两个就是SSH Key的密钥对，id_rsa是私钥，不能泄露出去，id_rsa.pub是公钥，可以放心地告诉任何人。
+第二步
+登陆GitHub，打开“Account settings”，“SSH Keys”页面：
+然后，点“Add SSH Key”，填上任意Title，在Key文本框里粘贴id_rsa.pub文件的内容：
+点“Add Key”，你就应该看到已经添加的Key：
+为什么GitHub需要SSH Key？因为GitHub需要识别出你推送的提交确实是你推送的，而不是别人冒充的，而Git支持SSH协议，所以，GitHub只要知道了你的公钥，就可以确认只有你自己才能推送。
+当然，GitHub允许你添加多个Key。假定你有若干电脑，你一会儿在公司提交，一会儿在家里提交，只要把每台电脑的Key都添加到GitHub，就可以在每台电脑上往GitHub推送了。
+在GitHub上免费托管的Git仓库，任何人都可以看到（但只有你自己才能改）。所以，不要把敏感信息放进去。
+如果你不想让别人看到Git库，有两个办法，一个是交点保护费，让GitHub把公开的仓库变成私有的，这样别人就看不见了（不可读更不可写）。另一个办法是自己动手，搭一个Git服务器，因为是你自己的Git服务器，所以别人也是看不见的。
+添加远程仓库
+你已经在本地创建了一个Git仓库后，又想在GitHub创建一个Git仓库，并且让这两个仓库进行远程同步，这样，GitHub上的仓库既可以作为备份，又可以让其他人通过该仓库来协作。
+第一步
+登陆GitHub，然后，在右上角找到“Create a new repo”按钮，创建一个新的仓库：
+在Repository name填入learngit，其他保持默认设置，点击“Create repository”按钮，就成功地创建了一个新的Git仓库：
+第二步
+目前，在GitHub上的这个learngit仓库还是空的，GitHub告诉我们，可以从这个仓库克隆出新的仓库，也可以把一个已有的本地仓库与之关联，然后，把本地仓库的内容推送到GitHub仓库。
+现在，我们根据GitHub的提示，在本地的learngit仓库下运行命令：
+$ git remote add origin git@github.com:example/learngit.git
+记得把上面的example替换成你自己的GitHub账户名。
+•git remote add [shortname] [url]命令的作用是添加并关联一个远程库。其中，shortname 一般是 origin，也可以是其他字符串，用来代替整个 url。
+添加后，远程库的名字就是origin，这是Git默认的叫法，也可以改成别的，但是origin这个名字一看就知道是远程库。
+第三步
+下一步，就可以把本地库的所有内容推送到远程库上：
+$ git push -u origin master
+Counting objects: 14, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (13/13), done.
+Writing objects: 100% (14/14), 1.18 KiB | 605.00 KiB/s, done.
+Total 14 (delta 5), reused 0 (delta 0)
+remote: Resolving deltas: 100% (5/5), done.
+To github.com:example/learngit.git
+ * [new branch]      master -> master
+Branch 'master' set up to track remote branch 'master' from 'origin'.
+把本地库的内容推送到远程，用git push命令，实际上是把当前分支master推送到远程。
+•git push -u origin master命令：关联后，由于远程库是空的，使用该命令第一次推送 master 分支的所有内容，Git不但会把本地的master分支内容推送到远程新的master分支，还会把本地的master分支和远程的master分支关联起来，后续再推送的时候就可以省略后面三个参数了，其中参数 -u 代表上游（upstream）的意思。
+•git push [remote] [branch]命令的作用是上传本地指定分支到远程仓库。
+推送成功后，可以立刻在GitHub页面中看到远程库的内容已经和本地一模一样：
+ 从现在起，只要本地作了提交，就可以通过命令：
+$ git push origin master
+把本地master分支的最新修改推送至GitHub，现在，你就拥有了真正的分布式版本库！
+SSH警告
+当你第一次使用Git的clone或者push命令连接GitHub时，会得到一个警告：
+The authenticity of host 'github.com (xx.xx.xx.xx)' can't be established.
+RSA key fingerprint is xx.xx.xx.xx.xx.
+Are you sure you want to continue connecting (yes/no)?
+这是因为Git使用SSH连接，而SSH连接在第一次验证GitHub服务器的Key时，需要你确认GitHub的Key的指纹信息是否真的来自GitHub的服务器，输入yes回车即可。
+Git会输出一个警告，告诉你已经把GitHub的Key添加到本机的一个信任列表里了：
+Warning: Permanently added 'github.com' (RSA) to the list of known hosts.
+这个警告只会出现一次，后面的操作就不会有任何警告了。
+从远程仓库克隆
+假设我们从零开发，那么最好的方式是先创建远程库，然后，从远程库克隆。
+第一步
+登陆GitHub，创建一个新的仓库，名字叫gitskills：
+我们勾选Initialize this repository with a README，这样GitHub会自动为我们创建一个README.md文件。创建完毕后，可以看到README.md文件：
+第二步
+用命令git clone克隆一个本地库：
+$ git clone git@github.com:example/gitskills.git
+Cloning into 'gitskills'...
+remote: Counting objects: 3, done.
+remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 3
+Receiving objects: 100% (3/3), done.
+•git clone [url]命令的作用是从远程库（origin）克隆一份到本地，仓库名同远程仓库名。
+注意把Git库的地址换成你自己的，然后进入gitskills目录看看，已经有README.md文件了：
+$ cd gitskills
+$ ls
+README.md
+•ls命令用于显示文件目录列表。
+如果有多个人协作开发，那么每个人各自从远程克隆一份就可以了。
+你也许还注意到，GitHub给出的地址不止一个，还可以用https://github.com/example/gitskills.git这样的地址。实际上，Git支持多种协议，默认的git://使用ssh，但也可以使用https等其他协议。
+使用https除了速度慢以外，还有个最大的麻烦是每次推送都必须输入口令，但是在某些只开放http端口的公司内部就无法使用ssh协议而只能用https。
+小结
+•要关联一个远程库，使用命令git remote add origin git@server-name:path/repo-name.git。
+•关联后，使用命令git push -u origin master第一次推送master分支的所有内容。
+•此后，每次本地提交后，只要有必要，就可以使用命令git push origin master推送最新修改。
+•分布式版本系统的最大好处之一是在本地工作完全不需要考虑远程库的存在，也就是有没有联网都可以正常工作，当有网络的时候，再把本地提交推送一下就完成了同步。
+•要克隆一个仓库，首先必须知道仓库的地址，然后使用git clone命令克隆。
+•Git支持多种协议，包括https，但通过ssh支持的原生git协议速度最快。
